@@ -8,8 +8,8 @@ Another Twitter notifier for GNOME Desktop
 
 * Display notifications with libnotify
 * Show status updates from Twitter using Twitter API
-* Passwords are stored in your GNOME Keyring
-* GConf to store settings
+* Passwords are stored in your GNOME Keyring (not yet)
+* GConf to store settings (not yet)
 * Written in Python ;)
 
 
