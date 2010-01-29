@@ -3,6 +3,7 @@ import sys
 
 APP_NAME = 'Gnotwify'
 APP_SHORT_NAME = 'gnotwify'
+SRV_NAME = 'twitter'
 
 CONFIG_DIR = os.path.join(os.path.expanduser('~'), '.' + APP_SHORT_NAME)
 CONFIG_FILE = os.path.join(CONFIG_DIR, APP_SHORT_NAME + '.cfg')
@@ -30,6 +31,5 @@ if not os.path.exists(CONFIG_DIR):
     sys.exit(1)
  
 from libgnotwify.Message import Message
-from libgnotwify.Service import Service, ServiceError
-from libgnotwify.Gnotwify import Gnotwify
+from libgnotwify.Gnotwify import Gnotwify, GnotwifyError
 
