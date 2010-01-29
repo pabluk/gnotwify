@@ -78,7 +78,7 @@ class Service(Thread):
         self.messages = new_messages
         return
 
-    def _show_unseen_messages(self):
+    def _showunseen_messages(self):
         """Shows the messages unseen."""
         for msg in self.messages:
             if not msg.viewed:
@@ -88,7 +88,7 @@ class Service(Thread):
                 self.logger.info(msg.title + ": " + msg.summary)
                 msg.viewed = True
 
-    def _unseen_messages(self):
+    def unseen_messages(self):
         """Returns the number of unseen messages."""
         i = 0
         for message in self.messages:
@@ -130,9 +130,9 @@ class Service(Thread):
                 new_messages = self._normalize_entries(entries)
                 self._update_messages(new_messages)
                 self._save_messages()
-                self._show_unseen_messages()
+                #self._showunseen_messages()
 
-            self.logger.debug("Unseen message(s): " + str(self._unseen_messages()) + " of " + str(len(self.messages)))
+            self.logger.debug("Unseen message(s): " + str(self.unseen_messages()) + " of " + str(len(self.messages)))
             self.stopthread.wait(self.interval)
 
     def stop(self):

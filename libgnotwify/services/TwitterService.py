@@ -89,10 +89,12 @@ class TwitterService(Service):
                     icon = os.path.join(self.configdir, self.SRV_NAME,
                            str(entry.user.id))
 
-            m = Message(entry.id, self.SRV_NAME,
-                        entry.user.name + " (" + \
-                        entry.user.screen_name + ")",
-                        entry.text, icon)
+            m = Message(entry.id, 
+                        '%s (%s)' % (entry.user.name, entry.user.screen_name),
+                        entry.text,
+                        'http://twitter.com/%s/status/%u' % (entry.user.screen_name, entry.id),
+                        icon)
+
  
             messages.append(m)
 

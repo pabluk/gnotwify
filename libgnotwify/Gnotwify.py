@@ -26,6 +26,7 @@ import pygtk
 pygtk.require("2.0")
 import gtk
 import webbrowser
+import textwrap
 
 from libgnotwify import APP_NAME, CONFIG_DIR, CONFIG_FILE, CURRENT_DIR
 from libgnotwify import Logger
@@ -68,6 +69,37 @@ class Gnotwify:
                     self.services[0].stop()
                     gtk.main_quit()
 
+                #new_messages = False
+
+                if self.services[0].unseen_messages() > 0 and len(menu.get_children()) <= 3:
+                    menuItem = gtk.ImageMenuItem(gtk.STOCK_CLEAR)
+                    menuItem.set_name('GtkTweetMenuItem')
+                    menuItem.set_label('Mark all as seen')
+                    #menuItem.connect('activate', activate_icon_cb, twitterIcon)
+                    menu.prepend(menuItem)
+
+                    menuItem = gtk.SeparatorMenuItem()
+                    menuItem.set_name('GtkTweetSeparatorMenuItem')
+                    menu.prepend(menuItem)
+
+                for message in self.services[0].messages:
+                    if not message.viewed:
+                        #new_messages = True
+                        message.in_menu = True
+                        menuItem = gtk.ImageMenuItem(textwrap.fill(message.summary, 35))
+                        for widget in menuItem.get_children():
+                            if widget.get_name() == 'GtkAccelLabel':
+                                widget.set_use_underline(False)
+                                icon = gtk.Image()
+                                icon.set_from_pixbuf(gtk.gdk.pixbuf_new_from_file_at_size(message.icon, 24, 24))
+                                menuItem.set_image(icon)
+                                menuItem.set_name('GtkTweetMenuItem')
+                                menuItem.connect('activate', open_browser, message.url)
+                                menu.prepend(menuItem)
+
+                #if new_messages:
+                #    show_notification("%d tweets unseen" % (twitterSrv._get_unseen_messages()))
+                   
                 item = gtk.ImageMenuItem('Twitter home')
                 icon = gtk.Image()
                 icon.set_from_file(
