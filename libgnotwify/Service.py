@@ -71,8 +71,10 @@ class Service(Thread):
 
             for message in self.messages:
                 if new_message.id == message.id:
-                    if message.viewed == True:
+                    if message.viewed:
                         new_message.viewed = True
+                    if message.displayed:
+                        new_message.displayed = True
                     break
 
         self.messages = new_messages

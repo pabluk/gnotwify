@@ -64,18 +64,43 @@ class Gnotwify:
                 def open_browser(item, url):
                     webbrowser.open(url)
 
-                def quit(widget, status_icon):
+                def quit(item, status_icon):
                     status_icon.set_visible(False)
                     self.services[0].stop()
                     gtk.main_quit()
 
+                def mark_all_as_seen(item):
+                    for item in menu.get_children():
+                        if item.get_name() == 'GtkTweetMenuItem' or item.get_name() == 'GtkTweetSeparatorMenuItem':
+                            menu.remove(item)
+                    for message in self.services[0].messages:
+                        if message.displayed:
+                            message.viewed = True
+                        
+
                 #new_messages = False
+
+                if len(menu.get_children()) < 3:
+                    item = gtk.ImageMenuItem('Twitter home')
+                    icon = gtk.Image()
+                    icon.set_from_file(
+                        os.path.join(CURRENT_DIR, 'icons', 'browser.png'))
+                    item.set_image(icon)
+                    item.connect('activate', open_browser, 'http://twitter.com')
+                    menu.append(item)
+
+                    item = gtk.SeparatorMenuItem()
+                    menu.append(item)
+
+                    item = gtk.ImageMenuItem(gtk.STOCK_QUIT)
+                    item.connect('activate', quit, status_icon)
+                    menu.append(item)
 
                 if self.services[0].unseen_messages() > 0 and len(menu.get_children()) <= 3:
                     menuItem = gtk.ImageMenuItem(gtk.STOCK_CLEAR)
                     menuItem.set_name('GtkTweetMenuItem')
                     menuItem.set_label('Mark all as seen')
-                    #menuItem.connect('activate', activate_icon_cb, twitterIcon)
+                    menuItem.connect('activate', mark_all_as_seen)
                     menu.prepend(menuItem)
 
                     menuItem = gtk.SeparatorMenuItem()
@@ -83,9 +108,9 @@ class Gnotwify:
                     menu.prepend(menuItem)
 
                 for message in self.services[0].messages:
-                    if not message.viewed:
+                    if not message.viewed and not message.displayed:
                         #new_messages = True
-                        message.in_menu = True
+                        message.displayed = True
                         menuItem = gtk.ImageMenuItem(textwrap.fill(message.summary, 35))
                         for widget in menuItem.get_children():
                             if widget.get_name() == 'GtkAccelLabel':
@@ -100,21 +125,6 @@ class Gnotwify:
                 #if new_messages:
                 #    show_notification("%d tweets unseen" % (twitterSrv._get_unseen_messages()))
                    
-                item = gtk.ImageMenuItem('Twitter home')
-                icon = gtk.Image()
-                icon.set_from_file(
-                    os.path.join(CURRENT_DIR, 'icons', 'browser.png'))
-                item.set_image(icon)
-                item.connect('activate', open_browser, 'http://twitter.com')
-                menu.append(item)
-
-                item = gtk.SeparatorMenuItem()
-                menu.append(item)
-
-                item = gtk.ImageMenuItem(gtk.STOCK_QUIT)
-                item.connect('activate', quit, status_icon)
-                menu.append(item)
-
                 menu.show_all()
                 menu.popup(None, None, None, 3, time)
         pass

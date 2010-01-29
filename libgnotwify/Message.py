@@ -35,6 +35,7 @@ class Message:
         self.url = url
         self.icon = icon
         self.viewed = False
+        self.displayed = False
 
     def show(self):
         """Send messages throug pynotify."""
