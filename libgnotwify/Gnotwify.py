@@ -130,6 +130,11 @@ class Gnotwify(Thread):
                 i += 1
         return i
 
+    def _reset_messages_displayed(self):
+        for message in self.messages:
+            if not message.viewed:
+                message.displayed = False
+
     def _reverse(self, data):
         """Returns the same array in reverse order."""
         for index in range(len(data)-1, -1, -1):
@@ -201,6 +206,7 @@ class Gnotwify(Thread):
     def run(self):
         """Start the loop to update the service and display their own messages."""
         self._load_messages()
+        self._reset_messages_displayed()
         while not self.stopthread.isSet():
             if not self.icon_locked:
                 try:
@@ -286,7 +292,6 @@ class Gnotwify(Thread):
 
                 for message in self.messages:
                     if not message.viewed and not message.displayed:
-                        #new_messages = True
                         message.displayed = True
                         menuItem = gtk.ImageMenuItem(textwrap.fill(message.summary, 35))
                         for widget in menuItem.get_children():
@@ -299,9 +304,6 @@ class Gnotwify(Thread):
                                 menuItem.connect('activate', open_browser, message.url)
                                 menu.prepend(menuItem)
 
-                #if new_messages:
-                #    show_notification("%d tweets unseen" % (twitterSrv._get_unseen_messages()))
-                   
                 menu.show_all()
                 menu.popup(None, None, None, 3, time)
         pass
