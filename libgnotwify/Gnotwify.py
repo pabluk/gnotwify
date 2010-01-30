@@ -58,14 +58,15 @@ class Gnotwify(Thread):
         self._load_config()
 
         self.icon_locked = False
+        self.status_icon = status_icon
         self.menu = gtk.Menu()
 
-        status_icon.set_from_file(
+        self.status_icon.set_from_file(
             os.path.join(CURRENT_DIR, 'icons', 'twitter-inactive.png'))
 
-        status_icon.connect('activate', self.on_status_icon_activate)
-        status_icon.connect('popup-menu', self.on_status_icon_popup_menu,
-            self.menu, status_icon)
+        self.status_icon.connect('activate', self.on_status_icon_activate)
+        self.status_icon.connect('popup-menu', self.on_status_icon_popup_menu,
+            self.menu, self.status_icon)
         self.menu.connect('deactivate', self.on_menu_deactivate)
 
 
@@ -201,15 +202,18 @@ class Gnotwify(Thread):
         """Start the loop to update the service and display their own messages."""
         self._load_messages()
         while not self.stopthread.isSet():
-            try:
-                entries = self._get_updates()
-            except ServiceError as error:
-                self.logger.error(error.description)
-            else:
-                new_messages = self._normalize_entries(entries)
-                self._update_messages(new_messages)
-                self._save_messages()
-                #self._showunseen_messages()
+            if not self.icon_locked:
+                try:
+                    entries = self._get_updates()
+                except ServiceError as error:
+                    self.logger.error(error.description)
+                else:
+                    new_messages = self._normalize_entries(entries)
+                    self._update_messages(new_messages)
+                    self._save_messages()
+                    if self.unseen_messages() > 0:
+                        self.icon_activate(True)
+                    #self._showunseen_messages()
 
             self.logger.debug("Unseen message(s): " + str(self.unseen_messages()) + " of " + str(len(self.messages)))
             self.stopthread.wait(self.interval)
@@ -218,8 +222,12 @@ class Gnotwify(Thread):
         self.stopthread.set()
 
     def icon_activate(self, activate):
-        if not self.icon_locked and activate:
-            pass
+        if activate:
+            self.status_icon.set_from_file(
+                os.path.join(CURRENT_DIR, 'icons', 'twitter.png'))
+        else:
+            self.status_icon.set_from_file(
+                os.path.join(CURRENT_DIR, 'icons', 'twitter-inactive.png'))
 
     def on_status_icon_activate(self, widget, data=None):
         print "click..."
@@ -246,10 +254,9 @@ class Gnotwify(Thread):
                     for message in self.messages:
                         if message.displayed:
                             message.viewed = True
+                    self._save_messages()
+                    self.icon_activate(False)
                         
-
-                #new_messages = False
-
                 if len(menu.get_children()) < 3:
                     item = gtk.ImageMenuItem('Twitter home')
                     icon = gtk.Image()
