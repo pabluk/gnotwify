@@ -37,7 +37,7 @@ import textwrap
 import twitter
 
 from libgnotwify import APP_NAME, SRV_NAME, CONFIG_DIR, CONFIG_FILE, \
-                        CURRENT_DIR, LOG_LEVELS
+                        DATA_DIR, CACHE_DIR, CURRENT_DIR, LOG_LEVELS
 from libgnotwify import Message
 
 gtk.gdk.threads_init()
@@ -51,7 +51,25 @@ class Gnotwify(Thread):
 
         self.messages = []
         self.disable_libnotify = False
+        self.username = 'gnotwify'
+        self.password = ''
+        self.interval = 35
+        self.loglevel = 'info'
         self.logger = logging.getLogger(APP_NAME)
+        self.logger.setLevel(LOG_LEVELS.get(self.loglevel, logging.INFO))
+
+        if not os.path.exists(CONFIG_DIR):
+            os.mkdir(CONFIG_DIR)
+
+        if not os.path.exists(CONFIG_FILE):
+            # Create a config file with default values
+            self._save_config()
+
+        if not os.path.exists(DATA_DIR):
+            os.mkdir(DATA_DIR)
+
+        if not os.path.exists(CACHE_DIR):
+            os.mkdir(CACHE_DIR)
 
         Thread.__init__(self, name=SRV_NAME)
         self.logger.debug("Thread started")
@@ -82,10 +100,21 @@ class Gnotwify(Thread):
         self.password = config.get('main', "password")
         self.interval = int(config.get('main', "interval"))
 
-        # if doesn't exist make a directory to store cached profile images
-        if not os.path.exists(CONFIG_DIR + "/" + SRV_NAME):
-            os.mkdir(CONFIG_DIR + "/" + SRV_NAME)
+    def _save_config(self):
+        """Store settings in the config file."""
 
+        f = open(CONFIG_FILE, 'w')
+        configdata = "[main]\n" 
+        configdata += "# to run without libnotify\n"
+        configdata += "disable_libnotify: %s\n" % (self.disable_libnotify)
+        configdata += "# Valid values for loglevel\n"
+        configdata += "# debug, info, warning, error, critical\n"
+        configdata += "loglevel: %s\n" % (self.loglevel)
+        configdata += "username: %s\n" % (self.username)
+        configdata += "password: %s\n" % (self.password)
+        configdata += "interval: %d\n" % (self.interval)
+        f.write(configdata)
+        f.close()
 
     def _update_messages(self, new_messages):
         """Update the array of messages."""
@@ -177,7 +206,7 @@ class Gnotwify(Thread):
 
         for entry in self._reverse(entries):
 
-            icon = os.path.join(CONFIG_DIR, SRV_NAME, str(entry.user.id))
+            icon = os.path.join(CACHE_DIR, str(entry.user.id))
             if not os.path.exists(icon):
                 try:
                     avatar = urllib2.urlopen(entry.user.profile_image_url)
@@ -188,12 +217,11 @@ class Gnotwify(Thread):
                                      (entry.user.screen_name))
                     icon = os.path.join(CURRENT_DIR, 'icons', 'twitter.png')
                 else:
-                    avatar_file = open(os.path.join(CONFIG_DIR, SRV_NAME, 
+                    avatar_file = open(os.path.join(CACHE_DIR, 
                                                     str(entry.user.id)), 'wb')
                     avatar_file.write(avatar.read())
                     avatar_file.close()
-                    icon = os.path.join(CONFIG_DIR, SRV_NAME,
-                                        str(entry.user.id))
+                    icon = os.path.join(CACHE_DIR, str(entry.user.id))
 
             msg = Message(entry.id, 
                           '%s (%s)' %
