@@ -54,7 +54,7 @@ class Gnotwify(Thread):
         self.username = 'gnotwify'
         self.password = ''
         self.interval = 35
-        self.loglevel = 'info'
+        self.loglevel = 'debug'
         self.logger = logging.getLogger(APP_NAME)
         self.logger.setLevel(LOG_LEVELS.get(self.loglevel, logging.INFO))
 
@@ -190,7 +190,14 @@ class Gnotwify(Thread):
 
         try:
             statuses = api.GetFriendsTimeline()
-        except:
+        except urllib2.HTTPError:
+            try:
+                statuses = api.GetUserTimeline(self.username)
+            except urllib2.HTTPError:
+                raise GnotwifyError('Update error')
+            else:
+                self.logger.debug("Updated")
+        except urllib2.URLError:
             raise GnotwifyError('Update error')
         else:
             self.logger.debug("Updated")
