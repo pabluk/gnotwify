@@ -1,0 +1,59 @@
+<gconfschemafile>
+  <schemalist>
+    <schema>
+      <key>/schemas/apps/gnotwify/username</key>
+      <applyto>/apps/gnotwify/username</applyto>
+      <owner>gnotwify</owner>
+      <type>string</type>
+      <default>gnotwify</default>
+      <locale name="C">
+        <short>Twitter username</short>
+        <long>Set the username for Twitter to retrieve updates.
+        </long>
+      </locale>
+    </schema>
+
+    <schema>
+      <key>/schemas/apps/gnotwify/interval</key>
+      <applyto>/apps/gnotwify/interval</applyto>
+      <owner>gnotwify</owner>
+      <type>int</type>
+      <default>35</default>
+      <locale name="C">
+        <short>An interval to check updates</short>
+        <long>
+        Time in seconds to check updates on Twitter. The value must not be less than 35 to avoid be banned from Twitter services.
+        </long>
+      </locale>
+    </schema>
+ 
+    <schema>
+      <key>/schemas/apps/gnotwify/disable_libnotify</key>
+      <applyto>/apps/gnotwify/disable_libnotify</applyto>
+      <owner>gnotwify</owner>
+      <type>bool</type>
+      <default>False</default>
+      <locale name="C">
+        <short>Disable shows notification with libnotify</short>
+        <long>If this options is set to True disable show notifications on when new messages arrive.
+        </long>
+      </locale>
+    </schema>
+
+    <schema>
+      <key>/schemas/apps/gnotwify/loglevel</key>
+      <applyto>/apps/gnotwify/loglevel</applyto>
+      <owner>gnotwify</owner>
+      <type>string</type>
+      <default>info</default>
+      <locale name="C">
+        <short>Set the log level</short>
+        <long>Set the log level. Valid values are debug, info, warning, error or critical.
+        </long>
+      </locale>
+    </schema>
+
+
+  </schemalist>
+</gconfschemafile>
+
