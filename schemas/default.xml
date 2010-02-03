@@ -1,0 +1,31 @@
+<gconfschemafile>
+  <schemalist>
+    <schema>
+      <key>/schemas/apps/gnotwify/interval</key>
+      <applyto>/apps/gnotwify/interval</applyto>
+      <owner>gnotwify</owner>
+      <type>int</type>
+      <default>35</default>
+      <locale name="C">
+        <short>An interval to check for updates</short>
+        <long>
+        </long>
+      </locale>
+    </schema>
+ 
+    <schema>
+      <key>/schemas/apps/gnotwify/disable_libnotify</key>
+      <applyto>/apps/gnotwify/disable_libnotify</applyto>
+      <owner>gnotwify</owner>
+      <type>bool</type>
+      <default>0</default>
+      <locale name="C">
+        <short>A short description of this key</short>
+        <long>A longer description here. We can have lots of text
+      here, describing what the possible values are, and what they mean.
+        </long>
+      </locale>
+    </schema>
+  </schemalist>
+</gconfschemafile>
+
