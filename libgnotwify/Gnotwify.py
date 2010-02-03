@@ -49,7 +49,6 @@ class Gnotwify(Thread):
 
     def __init__(self, status_icon):
 
-        self.last_id = 0
         self.messages = []
         self.disable_libnotify = False
         self.logger = logging.getLogger(APP_NAME)
