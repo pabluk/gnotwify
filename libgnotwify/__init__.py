@@ -1,5 +1,6 @@
 import os
 import sys
+import logging
 
 APP_NAME = 'Gnotwify'
 APP_SHORT_NAME = 'gnotwify'
@@ -8,7 +9,16 @@ SRV_NAME = 'twitter'
 CONFIG_DIR = os.path.join(os.path.expanduser('~'), '.' + APP_SHORT_NAME)
 CONFIG_FILE = os.path.join(CONFIG_DIR, APP_SHORT_NAME + '.cfg')
 CURRENT_DIR = os.path.realpath(os.path.dirname(sys.argv[0]))
+LOG_FILENAME = os.path.join(CONFIG_DIR, APP_SHORT_NAME + '.log')
+LOG_LEVELS = {'debug': logging.DEBUG,
+                'info': logging.INFO,
+                'warning': logging.WARNING,
+                'error': logging.ERROR,
+                'critical': logging.CRITICAL}
 
+logging.basicConfig(filename=LOG_FILENAME, level=logging.INFO,
+                    datefmt='%H:%M',
+                    format='[%(asctime)s][%(levelname)s:%(name)s] %(message)s')
 # Create config dir
 # Need to be ported to GConf
 if not os.path.exists(CONFIG_DIR):

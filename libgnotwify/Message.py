@@ -18,12 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from libgnotwify import APP_NAME
-try:
-    import pynotify
-except:
-    loggin.warning("There is no support for libnotify.\n"
-                   "Messages will be displayed on the terminal")
+"""Classes related to Messages"""
 
 class Message:
     """Defines the message structure."""
@@ -36,14 +31,4 @@ class Message:
         self.icon = icon
         self.viewed = False
         self.displayed = False
-
-    def show(self):
-        """Send messages throug pynotify."""
-        pynotify.init(APP_NAME)
-        try:
-            m = pynotify.Notification(self.title, self.summary, self.icon)
-            m.show()
-            return True
-        except:
-            return False
 

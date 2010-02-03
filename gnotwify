@@ -18,8 +18,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
-import signal
 import pygtk
 pygtk.require('2.0')
 import gtk
@@ -30,8 +28,8 @@ if __name__ == "__main__":
 
     status_icon = gtk.StatusIcon()
 
-    n = Gnotwify(status_icon)
-    n.start()
+    notifier = Gnotwify(status_icon)
+    notifier.start()
 
     gtk.main()
 
