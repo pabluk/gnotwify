@@ -224,8 +224,8 @@ class Gnotwify(Thread):
         vbox_twitter.pack_start(hbox_password)
         vbox_twitter.pack_start(hbox_interval)
 
-        checkbtn_libnotify = gtk.CheckButton("Show notifications \
-                                              using libnotify")
+        checkbtn_libnotify = gtk.CheckButton("Show notifications " \
+                                             "using libnotify")
 
         frame_twitter = gtk.Frame("<b>Twitter account</b>")
         label = frame_twitter.get_label_widget()
