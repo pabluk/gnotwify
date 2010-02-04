@@ -183,7 +183,7 @@ class Gnotwify(Thread):
         self.logger.debug("Saved messages")
         return
 
-    def _preferences_dialog(self):
+    def _preferences_dialog(self, menu_item=None):
         if self.dialog:
             self.dialog.present()
             return
@@ -224,7 +224,8 @@ class Gnotwify(Thread):
         vbox_twitter.pack_start(hbox_password)
         vbox_twitter.pack_start(hbox_interval)
 
-        checkbtn_libnotify = gtk.CheckButton("Show notifications with libnotify")
+        checkbtn_libnotify = gtk.CheckButton("Show notifications \
+                                              using libnotify")
 
         frame_twitter = gtk.Frame("<b>Twitter account</b>")
         label = frame_twitter.get_label_widget()
@@ -245,7 +246,8 @@ class Gnotwify(Thread):
 
         dialog.vbox.pack_start(vbox)
 
-        def response(dialog, response, username, password, interval, libnotify):
+        def response(dialog, response,
+                     username, password, interval, libnotify):
             if response == gtk.RESPONSE_ACCEPT:
                 self.username = username.get_text()
                 self.password = password.get_text()
@@ -261,7 +263,8 @@ class Gnotwify(Thread):
             self.updates_locked = False
             dialog.destroy()
 
-        dialog.connect("response", response, entry_username, entry_password, spinbtn_interval, checkbtn_libnotify)
+        dialog.connect("response", response, entry_username,
+                       entry_password, spinbtn_interval, checkbtn_libnotify)
 
         self.dialog = dialog
         dialog.show_all()
@@ -378,9 +381,64 @@ class Gnotwify(Thread):
 
         self.icon_activate(False)
 
-    def on_status_icon_activate(self, widget, data=None):
+    def on_status_icon_activate(self, status_icon, data=None):
         """On click action mark all messages as seen."""
-        self.mark_all_as_seen()
+        self.updates_locked = True
+
+        def open_browser(item, url):
+            """Open the message url in a default browser."""
+            webbrowser.open(url)
+
+        def mark_all_as_seen(item, data=None):
+            """Mark all messages as seen."""
+            self.mark_all_as_seen()
+
+        def on_menu_deactivate(menu, data=None):
+            """Enable icon status update on menu deactivate."""
+            self.updates_locked = False
+
+        menu = gtk.Menu()
+        menu.connect('deactivate', on_menu_deactivate)
+
+        if self.unseen_messages() > 0:
+            menu_item = gtk.ImageMenuItem(gtk.STOCK_CLEAR)
+            menu_item.set_name('GtkTweetMenuItem')
+            menu_item.set_label('Mark all as seen')
+            menu_item.connect('activate', mark_all_as_seen)
+            menu.prepend(menu_item)
+
+            menu_item = gtk.SeparatorMenuItem()
+            menu_item.set_name('GtkTweetSeparatorMenuItem')
+            menu.prepend(menu_item)
+
+        item = gtk.ImageMenuItem('Twitter home')
+        icon = gtk.Image()
+        icon.set_from_file(os.path.join(CURRENT_DIR,
+                                       'icons','browser.png'))
+        item.set_image(icon)
+        item.connect('activate', open_browser, 'http://twitter.com')
+        menu.append(item)
+
+        for message in self.messages:
+            if not message.viewed:
+                message.displayed = True
+                menu_item = gtk.ImageMenuItem(
+                                        textwrap.fill(message.summary, 35))
+                for widget in menu_item.get_children():
+                    if widget.get_name() == 'GtkAccelLabel':
+                        widget.set_use_underline(False)
+                        icon = gtk.Image()
+                        icon.set_from_pixbuf(
+                            gtk.gdk.pixbuf_new_from_file_at_size(
+                                message.icon, 24, 24))
+                        menu_item.set_image(icon)
+                        menu_item.set_name('GtkTweetMenuItem')
+                        menu_item.connect('activate',
+                                         open_browser, message.url)
+                        menu.prepend(menu_item)
+
+        menu.show_all()
+        menu.popup(None, None, gtk.status_icon_position_menu, 3, 0, status_icon)
 
     def on_status_icon_popup_menu(self, status_icon,
                                  button, timestamp, data=None):
@@ -388,19 +446,11 @@ class Gnotwify(Thread):
         if button == 3:
             self.updates_locked = True
 
-            def open_browser(item, url):
-                """Open the message url in a default browser."""
-                webbrowser.open(url)
-
             def quit(item, status_icon):
                 """Exit application."""
                 status_icon.set_visible(False)
                 self.stop()
                 gtk.main_quit()
-
-            def mark_all_as_seen(item, data=None):
-                """Mark all messages as seen."""
-                self.mark_all_as_seen()
 
             def on_menu_deactivate(menu, data=None):
                 """Enable icon status update on menu deactivate."""
@@ -408,12 +458,9 @@ class Gnotwify(Thread):
 
             menu = gtk.Menu()
             menu.connect('deactivate', on_menu_deactivate)
-            item = gtk.ImageMenuItem('Twitter home')
-            icon = gtk.Image()
-            icon.set_from_file(os.path.join(CURRENT_DIR,
-                                           'icons','browser.png'))
-            item.set_image(icon)
-            item.connect('activate', open_browser, 'http://twitter.com')
+
+            item = gtk.ImageMenuItem(gtk.STOCK_PREFERENCES)
+            item.connect('activate', self._preferences_dialog)
             menu.append(item)
 
             item = gtk.SeparatorMenuItem()
@@ -423,37 +470,9 @@ class Gnotwify(Thread):
             item.connect('activate', quit, status_icon)
             menu.append(item)
 
-            if self.unseen_messages() > 0:
-                menu_item = gtk.ImageMenuItem(gtk.STOCK_CLEAR)
-                menu_item.set_name('GtkTweetMenuItem')
-                menu_item.set_label('Mark all as seen')
-                menu_item.connect('activate', mark_all_as_seen)
-                menu.prepend(menu_item)
-
-                menu_item = gtk.SeparatorMenuItem()
-                menu_item.set_name('GtkTweetSeparatorMenuItem')
-                menu.prepend(menu_item)
-
-            for message in self.messages:
-                if not message.viewed:
-                    message.displayed = True
-                    menu_item = gtk.ImageMenuItem(
-                                            textwrap.fill(message.summary, 35))
-                    for widget in menu_item.get_children():
-                        if widget.get_name() == 'GtkAccelLabel':
-                            widget.set_use_underline(False)
-                            icon = gtk.Image()
-                            icon.set_from_pixbuf(
-                                gtk.gdk.pixbuf_new_from_file_at_size(
-                                    message.icon, 24, 24))
-                            menu_item.set_image(icon)
-                            menu_item.set_name('GtkTweetMenuItem')
-                            menu_item.connect('activate',
-                                             open_browser, message.url)
-                            menu.prepend(menu_item)
-
             menu.show_all()
-            menu.popup(None, None, None, 3, timestamp)
+            menu.popup(None, None, gtk.status_icon_position_menu,
+                       3, timestamp, status_icon)
 
 
 class GnotwifyError(Exception):
