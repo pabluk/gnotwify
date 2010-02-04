@@ -25,6 +25,7 @@ import sys
 import pickle
 import urllib2
 import logging
+import gnomekeyring
 import ConfigParser
 from threading import Thread, Event
 import pygtk
@@ -98,9 +99,10 @@ class Gnotwify(Thread):
                                                    "disable_libnotify")
         self.loglevel = config.get("main", "loglevel")
         self.logger.setLevel(LOG_LEVELS.get(self.loglevel, logging.INFO))
-        self.username = config.get('main', "username")
-        self.password = config.get('main', "password")
         self.interval = int(config.get('main', "interval"))
+        self.username = config.get('main', "username")
+        #self.password = config.get('main', "password")
+        self.password = self._get_password_from_keyring(self.username)
 
     def _save_config(self):
         """Store settings in the config file."""
@@ -473,6 +475,13 @@ class Gnotwify(Thread):
             menu.show_all()
             menu.popup(None, None, gtk.status_icon_position_menu,
                        3, timestamp, status_icon)
+
+    def _get_password_from_keyring(self, user):
+        try:
+            results = gnomekeyring.find_network_password_sync(user=user, server='twitter.com', protocol='http')
+        except gnomekeyring.NoMatchError:
+            return None
+        return results[0]["password"]
 
 
 class GnotwifyError(Exception):
