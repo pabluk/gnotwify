@@ -25,12 +25,12 @@ import sys
 import pickle
 import urllib2
 import logging
-import gnomekeyring
 import ConfigParser
 from threading import Thread, Event
 import pygtk
 pygtk.require("2.0")
 import gtk
+import gnomekeyring
 import webbrowser
 import textwrap
 
@@ -101,8 +101,11 @@ class Gnotwify(Thread):
         self.logger.setLevel(LOG_LEVELS.get(self.loglevel, logging.INFO))
         self.interval = int(config.get('main', "interval"))
         self.username = config.get('main', "username")
-        #self.password = config.get('main', "password")
-        self.password = self._get_password_from_keyring(self.username)
+        password = self._get_password_from_keyring()
+        if password:
+            self.password = password
+        else:
+            self.password = ''
 
     def _save_config(self):
         """Store settings in the config file."""
@@ -115,10 +118,16 @@ class Gnotwify(Thread):
         configdata += "# debug, info, warning, error, critical\n"
         configdata += "loglevel: %s\n" % (self.loglevel)
         configdata += "username: %s\n" % (self.username)
-        configdata += "password: %s\n" % (self.password)
         configdata += "interval: %d\n" % (self.interval)
         f.write(configdata)
         f.close()
+
+        stored_pass = self._get_password_from_keyring()
+        if stored_pass:
+            if stored_pass != self.password:
+                self._set_password_to_keyring()
+        else:
+            self._set_password_to_keyring()
 
     def _update_messages(self, new_messages):
         """Update the array of messages."""
@@ -476,9 +485,40 @@ class Gnotwify(Thread):
             menu.popup(None, None, gtk.status_icon_position_menu,
                        3, timestamp, status_icon)
 
-    def _get_password_from_keyring(self, user):
+    def _set_password_to_keyring(self):
+        if self.username == '':
+            return False
+
+        keyring = gnomekeyring.get_default_keyring_sync()
+        display_name = 'HTTP secret for %s at twitter.com' % (self.username)
+        type = gnomekeyring.ITEM_NETWORK_PASSWORD
+        
+        # just a utility function to create attrs easily.
+        def parse(s):
+           ret = {}
+           try:
+               ret = dict([(k,v) for k,v in [x.split(':') for x in s.split(',')] if k and v])
+           except ValueError:
+               pass
+           return ret
+        
+        # create attrs :: {} (dict)
+        attrs = {
+         'user':None, 'domain':None, 'server':None, 'object':None,
+          'protocol':None, 'authtype':None, 'port':None,
+        }
+        usr_attrs = parse("server:twitter.com,user:%s,protocol:http" % (self.username))
+        attrs.update(usr_attrs) 
+        
         try:
-            results = gnomekeyring.find_network_password_sync(user=user, server='twitter.com', protocol='http')
+            id = gnomekeyring.item_create_sync(keyring, type, display_name, usr_attrs, self.password, True)
+        except gnomekeyring.Error, e:
+            return False
+        return True
+        
+    def _get_password_from_keyring(self):
+        try:
+            results = gnomekeyring.find_network_password_sync(user=self.username, server='twitter.com', protocol='http')
         except gnomekeyring.NoMatchError:
             return None
         return results[0]["password"]
