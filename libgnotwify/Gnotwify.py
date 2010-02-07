@@ -406,6 +406,7 @@ class Gnotwify(Thread):
                     elif message.id == id:
                         message.viewed = True
                         status_link = message.url
+            self._save_messages()
             open_browser(item=None, url=status_link)
 
         def open_browser(item, url):
