@@ -32,8 +32,6 @@ pygtk.require("2.0")
 import gtk
 import gnomekeyring
 import webbrowser
-import textwrap
-
 
 import twitter
 
@@ -295,6 +293,8 @@ class Gnotwify(Thread):
             self._preferences_dialog()
         except urllib2.URLError:
             raise GnotwifyError('Update error')
+        except:
+            raise GnotwifyError('Update error')
         else:
             self.logger.debug("Updated")
         
@@ -327,7 +327,7 @@ class Gnotwify(Thread):
                     icon = os.path.join(CACHE_DIR, str(entry.user.id))
 
             msg = Message(entry.id, 
-                          '%s (%s)' %
+                          '%s (%s)' % 
                           (entry.user.name, entry.user.screen_name),
                           entry.text,
                           'http://twitter.com/%s/status/%u' % 
@@ -396,6 +396,18 @@ class Gnotwify(Thread):
         """On click action mark all messages as seen."""
         self.updates_locked = True
 
+        def on_item_activate(item, id):
+            """Mark a message as read and open default browser."""
+            status_link = ''
+            for message in self.messages:
+                if not message.viewed:
+                    if message.id < id:
+                        message.viewed = True
+                    elif message.id == id:
+                        message.viewed = True
+                        status_link = message.url
+            open_browser(item=None, url=status_link)
+
         def open_browser(item, url):
             """Open the message url in a default browser."""
             webbrowser.open(url)
@@ -433,20 +445,25 @@ class Gnotwify(Thread):
         for message in self.messages:
             if not message.viewed:
                 message.displayed = True
-                menu_item = gtk.ImageMenuItem(
-                                        textwrap.fill(message.summary, 35))
-                for widget in menu_item.get_children():
-                    if widget.get_name() == 'GtkAccelLabel':
-                        widget.set_use_underline(False)
-                        icon = gtk.Image()
-                        icon.set_from_pixbuf(
-                            gtk.gdk.pixbuf_new_from_file_at_size(
-                                message.icon, 24, 24))
-                        menu_item.set_image(icon)
-                        menu_item.set_name('GtkTweetMenuItem')
-                        menu_item.connect('activate',
-                                         open_browser, message.url)
-                        menu.prepend(menu_item)
+
+                menu_item = gtk.ImageMenuItem()
+                icon = gtk.Image()
+                icon.set_from_pixbuf(gtk.gdk.pixbuf_new_from_file_at_size(message.icon, 32, 32))
+                menu_item.set_image(icon)
+
+                label = gtk.Label('%s' % (message.summary))
+                label.set_use_underline(False)
+                label.set_line_wrap(True)
+                label.set_width_chars(35)
+                label.set_max_width_chars(35)
+                label.set_alignment(0,0.5)
+
+                menu_item.add(label)
+
+                menu_item.set_name('GtkTweetMenuItem')
+                menu_item.connect('activate',
+                                  on_item_activate, message.id)
+                menu.prepend(menu_item)
 
         menu.show_all()
         menu.popup(None, None, gtk.status_icon_position_menu, 3, 0, status_icon)
