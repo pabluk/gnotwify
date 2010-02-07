@@ -407,6 +407,10 @@ class Gnotwify(Thread):
                         message.viewed = True
                         status_link = message.url
             self._save_messages()
+            if self.unseen_messages() > 0:
+                self.icon_activate(True)
+            else:
+                self.icon_activate(False)
             open_browser(item=None, url=status_link)
 
         def open_browser(item, url):
