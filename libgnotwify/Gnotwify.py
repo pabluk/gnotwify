@@ -53,6 +53,7 @@ class Gnotwify(Thread):
         self.username = ''
         self.password = ''
         self.interval = 35
+        self.last_id = None
         self.loglevel = 'debug'
         self.logger = logging.getLogger(APP_NAME)
         self.logger.setLevel(LOG_LEVELS.get(self.loglevel, logging.INFO))
@@ -89,7 +90,7 @@ class Gnotwify(Thread):
         status_icon.set_visible(True)
 
     def _load_config(self):
-        """Load configuration settings for NotifyAll."""
+        """Load configuration settings for Gnotwify."""
         config = ConfigParser.ConfigParser()
 
         config.read(CONFIG_FILE)
@@ -129,19 +130,9 @@ class Gnotwify(Thread):
 
     def _update_messages(self, new_messages):
         """Update the array of messages."""
-        # Fixed: maybe this could be improved
-        for new_message in new_messages:
-
-            for message in self.messages:
-                if new_message.id == message.id:
-                    if message.viewed:
-                        new_message.viewed = True
-                    if message.displayed:
-                        new_message.displayed = True
-                    break
-
-        self.messages = new_messages
-        return
+        if new_messages:
+            self.messages.extend(new_messages)
+            self.set_last_id()
 
     def _showunseen_messages(self):
         """Shows the messages unseen."""
@@ -173,6 +164,13 @@ class Gnotwify(Thread):
         for index in range(len(data)-1, -1, -1):
             yield data[index]
 
+    def set_last_id(self):
+        try:
+            self.last_id = self.messages[-1].id  
+        except:
+            self.last_id = None
+        self.logger.debug("Setting status id: %d" % (self.last_id))
+
     def _load_messages(self):
         """Load messages state."""
         filename = os.path.join(DATA_DIR, SRV_NAME + '.dat')
@@ -180,6 +178,7 @@ class Gnotwify(Thread):
             msgs_data = open(filename, 'r')
             self.messages = pickle.load(msgs_data)
             self.logger.debug("Loaded messages")
+            self.set_last_id()
         else:
             self.logger.debug("Messages file does not exist")
         return
@@ -287,7 +286,9 @@ class Gnotwify(Thread):
         api = twitter.Api(self.username, self.password)
 
         try:
-            statuses = api.GetFriendsTimeline()
+            statuses = api.GetFriendsTimeline(since_id=self.last_id)
+            self.logger.debug("Last status id: %d" % (self.last_id))
+            #statuses = api.GetFriendsTimeline()
         except (urllib2.HTTPError, twitter.TwitterError):
             self.logger.debug("Authentication error")
             self._preferences_dialog()
