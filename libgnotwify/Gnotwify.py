@@ -169,7 +169,6 @@ class Gnotwify(Thread):
             self.last_id = self.messages[-1].id  
         except:
             self.last_id = None
-        self.logger.debug("Setting status id: %d" % (self.last_id))
 
     def _load_messages(self):
         """Load messages state."""
@@ -287,15 +286,13 @@ class Gnotwify(Thread):
 
         try:
             statuses = api.GetFriendsTimeline(since_id=self.last_id)
-            self.logger.debug("Last status id: %d" % (self.last_id))
-            #statuses = api.GetFriendsTimeline()
         except (urllib2.HTTPError, twitter.TwitterError):
             self.logger.debug("Authentication error")
             self._preferences_dialog()
         except urllib2.URLError:
-            raise GnotwifyError('Update error')
+            raise UpdateError
         except:
-            raise GnotwifyError('Update error')
+            raise UnknownError
         else:
             self.logger.debug("Updated")
         
@@ -547,11 +544,7 @@ class Gnotwify(Thread):
         return results[0]["password"]
 
 
-class GnotwifyError(Exception):
-    """Class that define the Gnotwify errors."""
-    def __init__(self, description):
-        self.description = description
-
-    def __str__(self):
-        return repr(self.descripton)
+class GnotwifyError(Exception): pass
+class UpdateError(GnotwifyError): pass
+class UnknownError(GnotwifyError): pass
 
