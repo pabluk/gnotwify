@@ -135,17 +135,6 @@ class Gnotwify(Thread):
             self.messages.extend(new_messages)
             self.set_last_id()
 
-    def _showunseen_messages(self):
-        """Shows the messages unseen."""
-        for msg in self.messages:
-            if not msg.viewed:
-                if not self.disable_libnotify and \
-                   os.environ.has_key('DISPLAY'):
-                    if not msg.show():
-                        break
-                self.logger.info(msg.title + ": " + msg.summary)
-                msg.viewed = True
-
     def unseen_messages(self):
         """Returns the number of unseen messages."""
         i = 0
@@ -257,6 +246,9 @@ class Gnotwify(Thread):
         def response(dialog, response,
                      username, password, interval, libnotify):
             if response == gtk.RESPONSE_ACCEPT:
+                if self.username != username.get_text():
+                    self.last_id = None
+                    self.messages = []
                 self.username = username.get_text()
                 self.password = password.get_text()
                 self.interval = interval.get_value_as_int()
@@ -359,7 +351,7 @@ class Gnotwify(Thread):
                     self._save_messages()
                     if self.unseen_messages() > 0:
                         self.icon_activate(True)
-                        if new_messages:
+                        if new_messages and not self.disable_libnotify:
                             self.show_notification('%d tweets unseen' % (self.unseen_messages()))
 
             self.logger.debug("Unseen message(s): %d of %d" %
