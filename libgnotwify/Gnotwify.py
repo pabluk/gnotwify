@@ -32,6 +32,7 @@ pygtk.require("2.0")
 import gtk
 import gnomekeyring
 import webbrowser
+import pynotify
 
 import twitter
 
@@ -290,9 +291,9 @@ class Gnotwify(Thread):
             self.logger.debug("Authentication error")
             self._preferences_dialog()
         except urllib2.URLError:
-            raise UpdateError
+            raise UpdateError, "Update error. Check your internet connection"
         except:
-            raise UnknownError
+            raise UnknownError, "Unknown error"
         else:
             self.logger.debug("Updated")
         
@@ -351,13 +352,15 @@ class Gnotwify(Thread):
                 try:
                     entries = self._get_updates()
                 except GnotwifyError as error:
-                    self.logger.error(error.description)
+                    self.logger.error(error)
                 else:
                     new_messages = self._normalize_entries(entries)
                     self._update_messages(new_messages)
                     self._save_messages()
                     if self.unseen_messages() > 0:
                         self.icon_activate(True)
+                        if new_messages:
+                            self.show_notification('%d tweets unseen' % (self.unseen_messages()))
 
             self.logger.debug("Unseen message(s): %d of %d" %
                              (self.unseen_messages(), len(self.messages)))
@@ -542,6 +545,17 @@ class Gnotwify(Thread):
         except gnomekeyring.NoMatchError:
             return None
         return results[0]["password"]
+
+    def show_notification(self, title, summary=None):
+        """Send messages throug pynotify."""
+        icon = os.path.join(CURRENT_DIR, 'icons', 'twitter-icon.png')
+        pynotify.init(APP_NAME)
+        try:
+            notification = pynotify.Notification(title, summary, icon)
+            notification.show()
+            return True
+        except:
+            return False
 
 
 class GnotwifyError(Exception): pass
