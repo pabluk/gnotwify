@@ -300,22 +300,24 @@ class Gnotwify(Thread):
 
         for entry in self._reverse(entries):
 
-            icon = os.path.join(CACHE_DIR, str(entry.user.id))
+            user_path = os.path.join(CACHE_DIR, str(entry.user.id))
+            if not os.path.isdir(user_path):
+                os.mkdir(user_path)
+
+            icon = os.path.join(user_path, os.path.basename(entry.user.profile_image_url))
             if not os.path.exists(icon):
                 try:
                     avatar = urllib2.urlopen(entry.user.profile_image_url)
-                    self.logger.debug("Fetching image profile for %s" % 
-                                     (entry.user.screen_name))
+                    self.logger.debug("Fetching image profile %s for %s" % 
+                                     (entry.user.profile_image_url, entry.user.screen_name))
                 except urllib2.URLError, urllib2.HTTPError:
                     self.logger.error("Error fetching image profile for %s" % 
                                      (entry.user.screen_name))
                     icon = os.path.join(CURRENT_DIR, 'icons', 'twitter.png')
                 else:
-                    avatar_file = open(os.path.join(CACHE_DIR, 
-                                                    str(entry.user.id)), 'wb')
+                    avatar_file = open(icon, 'wb')
                     avatar_file.write(avatar.read())
                     avatar_file.close()
-                    icon = os.path.join(CACHE_DIR, str(entry.user.id))
 
             msg = Message(entry.id, 
                           '%s (%s)' % 
