@@ -85,10 +85,15 @@ class Gnotwify(Thread):
         self.status_icon.set_from_file(os.path.join(CURRENT_DIR, 'icons', 
                                                     'twitter-inactive.png'))
 
-        self.status_icon.connect('activate', self.on_status_icon_activate)
-        self.status_icon.connect('popup-menu', self.on_status_icon_popup_menu)
+        self.status_icon.connect('button-press-event', self.button_press)
 
         status_icon.set_visible(True)
+
+    def button_press(self, object, event):
+        if event.button == 1:
+            self.on_status_icon_activate(object, event.button, event.time)
+        if event.button == 3:
+            self.on_status_icon_popup_menu(object, event.button, event.time)
 
     def _load_config(self):
         """Load configuration settings for Gnotwify."""
@@ -308,8 +313,8 @@ class Gnotwify(Thread):
             if not os.path.exists(icon):
                 try:
                     avatar = urllib2.urlopen(entry.user.profile_image_url)
-                    self.logger.debug("Fetching image profile %s for %s" % 
-                                     (entry.user.profile_image_url, entry.user.screen_name))
+                    self.logger.debug("Fetching new image profile for %s" % 
+                                     (entry.user.screen_name))
                 except urllib2.URLError, urllib2.HTTPError:
                     self.logger.error("Error fetching image profile for %s" % 
                                      (entry.user.screen_name))
@@ -387,7 +392,7 @@ class Gnotwify(Thread):
 
         self.icon_activate(False)
 
-    def on_status_icon_activate(self, status_icon, data=None):
+    def on_status_icon_activate(self, status_icon, button, timestamp, data=None):
         """On click action mark all messages as seen."""
         self.updates_locked = True
 
@@ -466,7 +471,7 @@ class Gnotwify(Thread):
                 menu.prepend(menu_item)
 
         menu.show_all()
-        menu.popup(None, None, gtk.status_icon_position_menu, 3, 0, status_icon)
+        menu.popup(None, None, gtk.status_icon_position_menu, button, timestamp, status_icon)
 
     def on_status_icon_popup_menu(self, status_icon,
                                  button, timestamp, data=None):
