@@ -83,7 +83,7 @@ class Gnotwify(Thread):
         self.status_icon = status_icon
 
         self.status_icon.set_from_file(os.path.join(CURRENT_DIR, 'icons', 
-                                                    'twitter-inactive.png'))
+                                                    'twitter-inactive.svg'))
 
         self.status_icon.connect('button-press-event', self.button_press)
 
@@ -318,7 +318,7 @@ class Gnotwify(Thread):
                 except urllib2.URLError, urllib2.HTTPError:
                     self.logger.error("Error fetching image profile for %s" % 
                                      (entry.user.screen_name))
-                    icon = os.path.join(CURRENT_DIR, 'icons', 'twitter.png')
+                    icon = os.path.join(CURRENT_DIR, 'icons', 'twitter.svg')
                 else:
                     avatar_file = open(icon, 'wb')
                     avatar_file.write(avatar.read())
@@ -373,10 +373,10 @@ class Gnotwify(Thread):
         """Change the status icon to indicate activity."""
         if activate:
             self.status_icon.set_from_file(os.path.join(CURRENT_DIR, 'icons',
-                                                       'twitter.png'))
+                                                       'twitter.svg'))
         else:
             self.status_icon.set_from_file(os.path.join(CURRENT_DIR, 'icons',
-                                                       'twitter-inactive.png'))
+                                                       'twitter-inactive.svg'))
 
     def mark_all_as_seen(self):
         """Mark all messages displayed and not seen as seen."""
