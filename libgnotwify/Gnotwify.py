@@ -33,6 +33,7 @@ import gtk
 import gnomekeyring
 import webbrowser
 import pynotify
+import keybinder
 
 import twitter
 
@@ -86,9 +87,16 @@ class Gnotwify(Thread):
                                                     'twitter-inactive.svg'))
 
         self.status_icon.connect('button-press-event', self.button_press)
+        try:
+            keybinder.bind('F12', self.key_press, self.status_icon)
+        except KeyError:
+            self.logger.error("Unable to use <F12>. Hotkey is already bound")
 
         status_icon.set_visible(True)
 
+    def key_press(self, object):
+        self.on_status_icon_activate(object, 1, keybinder.get_current_event_time())
+        
     def button_press(self, object, event):
         if event.button == 1:
             self.on_status_icon_activate(object, event.button, event.time)
