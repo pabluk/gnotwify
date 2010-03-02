@@ -95,7 +95,8 @@ class Gnotwify(Thread):
         status_icon.set_visible(True)
 
     def key_press(self, object):
-        self.on_status_icon_activate(object, 1, keybinder.get_current_event_time())
+        if not self.updates_locked:
+            self.on_status_icon_activate(object, 1, keybinder.get_current_event_time())
         
     def button_press(self, object, event):
         if event.button == 1:
